@@ -3,56 +3,56 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package demojdbc_ca5;
+package demo_ca3;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import com.microsoft.sqlserver.jdbc.SQLServerDriver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
-import com.microsoft.sqlserver.jdbc.SQLServerDriver;
 
 /**
  *
  * @author tiennh
  */
-public class DemoJDBC_Ca5 {
+public class DemoJDBC {
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        String dbUsername = "sa", dbPassword = "Aa@123456";
-        String url = "jdbc:sqlserver://localhost:1433;databaseName=qlsv";
-
         try {
+            String dbUsername = "sa", dbPassword = "Aa@123456";
+            String url = "jdbc:sqlserver://localhost:1433;databaseName=qlsv";
             Class.forName("SQLServerDriver");
-            
+
             Connection connection = DriverManager.getConnection(url, dbUsername, dbPassword);
             
+            String query = "SELECT * FROM sinh_vien";
             Statement statement = connection.createStatement();
 
-            String query = "SELECT * FROM sinh_vien";
+//            statement.getR
             ResultSet resultSet = statement.executeQuery(query);
-            
-            while ( resultSet.next() )
-            {
-                String id = resultSet.getString("id");
+
+            while ( resultSet.next() ) {
+                int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
                 String email = resultSet.getString("email");
-                String password = resultSet.getString("password");
                 String maSv = resultSet.getString("ma_sv");
-                String diem = resultSet.getString("diem");
+                int diem = resultSet.getInt("diem");
                 
-                System.out.println(id + " - " + name + " - " + email +
-                    " - " + password + " - " + maSv + " - " + diem);
+                System.out.println(id + " - " + name + " - " + email + " - " + 
+                    maSv + " - " + diem);
             }
+
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(DemoJDBC_Ca5.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DemoJDBC.class.getName()).log(Level.SEVERE, null, ex);
         } catch (SQLException ex) {
-            Logger.getLogger(DemoJDBC_Ca5.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DemoJDBC.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
 }
