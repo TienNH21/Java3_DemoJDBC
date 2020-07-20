@@ -39,12 +39,12 @@ public class DemoJDBC_Ca5 {
             
             while ( resultSet.next() )
             {
-                String id = resultSet.getString("id");
+                int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
                 String email = resultSet.getString("email");
                 String password = resultSet.getString("password");
                 String maSv = resultSet.getString("ma_sv");
-                String diem = resultSet.getString("diem");
+                int diem = resultSet.getInt("diem");
                 
                 System.out.println(id + " - " + name + " - " + email +
                     " - " + password + " - " + maSv + " - " + diem);
