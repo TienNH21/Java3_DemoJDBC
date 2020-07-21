@@ -16,8 +16,8 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.PreparedStatement;
 import javax.swing.table.DefaultTableModel;
-
 
 /**
  *
@@ -134,6 +134,8 @@ public class QSLV extends javax.swing.JFrame {
         jLabel6 = new javax.swing.JLabel();
         txtDiem = new javax.swing.JTextField();
         btnSave = new javax.swing.JButton();
+        btnUpdate = new javax.swing.JButton();
+        btnDelete = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblDSSV = new javax.swing.JTable();
 
@@ -151,7 +153,21 @@ public class QSLV extends javax.swing.JFrame {
 
         jLabel6.setText("Điểm");
 
-        btnSave.setText("Save");
+        btnSave.setText("Add");
+        btnSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSaveActionPerformed(evt);
+            }
+        });
+
+        btnUpdate.setText("Update");
+
+        btnDelete.setText("Delete");
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -164,25 +180,30 @@ public class QSLV extends javax.swing.JFrame {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel2)
-                    .addComponent(jLabel3)
-                    .addComponent(jLabel6))
-                .addGap(26, 26, 26)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(txtMaSV, javax.swing.GroupLayout.DEFAULT_SIZE, 80, Short.MAX_VALUE)
-                    .addComponent(txtHoTen)
-                    .addComponent(txtDiem))
-                .addGap(24, 24, 24)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnSave, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel2)
+                            .addComponent(jLabel3)
+                            .addComponent(jLabel6))
+                        .addGap(26, 26, 26)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(txtMaSV, javax.swing.GroupLayout.DEFAULT_SIZE, 80, Short.MAX_VALUE)
+                            .addComponent(txtHoTen)
+                            .addComponent(txtDiem))
+                        .addGap(38, 38, 38)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel5)
                             .addComponent(jLabel4))
                         .addGap(18, 18, 18)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(txtEmail, javax.swing.GroupLayout.DEFAULT_SIZE, 81, Short.MAX_VALUE)
-                            .addComponent(txtPassword))))
+                            .addComponent(txtPassword)))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(btnSave)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnUpdate)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnDelete)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
@@ -206,9 +227,13 @@ public class QSLV extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
-                    .addComponent(txtDiem, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnSave))
-                .addContainerGap(14, Short.MAX_VALUE))
+                    .addComponent(txtDiem, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnSave)
+                    .addComponent(btnUpdate)
+                    .addComponent(btnDelete))
+                .addContainerGap(11, Short.MAX_VALUE))
         );
 
         tblDSSV.setModel(new javax.swing.table.DefaultTableModel(
@@ -272,6 +297,107 @@ public class QSLV extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
+        // TODO add your handling code here:
+        String maSV = this.txtMaSV.getText();
+        String hoTen = this.txtHoTen.getText();
+        String email = this.txtEmail.getText();
+        String password = this.txtPassword.getText();
+        String diemStr = this.txtDiem.getText();
+        int diem = 0;
+
+        if (
+            maSV.length() == 0 ||
+            hoTen.length() == 0 ||
+            email.length() == 0 ||
+            password.length() == 0 ||
+            diemStr.length() == 0
+        ) {
+            JOptionPane.showMessageDialog(this, "Không được để trống!");
+            return ;
+        }
+
+        try {
+            diem = Integer.parseInt(diemStr);
+            
+            if (diem < 0 || diem > 10) {
+                JOptionPane.showMessageDialog(this, "Điểm phải thuộc khoảng 0-10!");
+                return ;
+            }
+        } catch (Exception ex) {
+            System.out.println("---- btnSaveActionPerformed -----");
+            JOptionPane.showMessageDialog(this, "Điểm phải là số nguyên!");
+            ex.printStackTrace();
+            return ;
+        }
+
+        try {
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            String url = "jdbc:sqlserver://localhost:1433;databaseName=qlsv";
+
+            Connection conn = DriverManager.getConnection(url,
+                this.dbUsername, this.dbPassword);
+
+            String query = "INSERT INTO sinh_vien(name, ma_sv, email, password, diem)"
+                + " VALUES (?, ?, ?, ?, ?)";
+            PreparedStatement ps = conn.prepareStatement(query);
+
+            ps.setString(1, hoTen);
+            ps.setString(2, maSV);
+            ps.setString(3, email);
+            ps.setString(4, password);
+            ps.setInt(5, diem);
+
+            ps.execute();
+
+            /*
+             * BTVN: Query lấy ra sinh viên theo mã sv hoặc email
+             * Hiển thị vào lên JTable
+             * String query = "SELECT * FROM sinh_vien WHERE email = ?"
+             */
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi!");
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi!");
+        }
+    }//GEN-LAST:event_btnSaveActionPerformed
+
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        // TODO add your handling code here:
+        
+        int row = this.tblDSSV.getSelectedRow();
+        if (row == -1) {
+            return ;
+        }
+
+        try {
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            String url = "jdbc:sqlserver://localhost:1433;databaseName=qlsv";
+
+            Connection conn = DriverManager.getConnection(
+                url,
+                this.dbUsername,
+                this.dbPassword
+            );
+            
+            String maSV = this.tblDSSV.getValueAt(row, 0).toString();
+            System.out.println(maSV);
+            String query = "DELETE FROM sinh_vien WHERE ma_sv = ?";
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setString(1, maSV);
+            
+            ps.execute();
+            
+            /*
+             * BTVN: Xóa dòng khỏi JTable
+             */
+        } catch (ClassNotFoundException ex) {
+        } catch (SQLException ex) {
+        }
+    }//GEN-LAST:event_btnDeleteActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -308,7 +434,9 @@ public class QSLV extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnDelete;
     private javax.swing.JButton btnSave;
+    private javax.swing.JButton btnUpdate;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
