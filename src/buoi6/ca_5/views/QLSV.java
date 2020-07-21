@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
@@ -134,7 +135,9 @@ public class QLSV extends javax.swing.JFrame {
         jLabel6 = new javax.swing.JLabel();
         txtEmail = new javax.swing.JTextField();
         txtPassword = new javax.swing.JTextField();
-        btnSave = new javax.swing.JButton();
+        btnAdd = new javax.swing.JButton();
+        btnUpdate = new javax.swing.JButton();
+        btnDelete = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblDanhSachSV = new javax.swing.JTable();
@@ -153,7 +156,21 @@ public class QLSV extends javax.swing.JFrame {
 
         jLabel6.setText("Password");
 
-        btnSave.setText("Save");
+        btnAdd.setText("Add");
+        btnAdd.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddActionPerformed(evt);
+            }
+        });
+
+        btnUpdate.setText("Update");
+
+        btnDelete.setText("Delete");
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -182,7 +199,11 @@ public class QLSV extends javax.swing.JFrame {
                             .addComponent(txtEmail)))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(btnSave)))
+                        .addComponent(btnDelete)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnUpdate)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnAdd)))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -205,7 +226,10 @@ public class QLSV extends javax.swing.JFrame {
                     .addComponent(jLabel4)
                     .addComponent(txtDiem, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnSave)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnAdd)
+                    .addComponent(btnUpdate)
+                    .addComponent(btnDelete))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -292,6 +316,161 @@ public class QLSV extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
+        // TODO add your handling code here:
+        String name = this.txtHoTen.getText();
+        String email = this.txtEmail.getText();
+        String password = this.txtPassword.getText();
+        String maSV = this.txtMaSV.getText();
+        String diemStr = this.txtDiem.getText();
+
+        if (
+            name.length() == 0 ||
+            email.length() == 0 ||
+            password.length() == 0 ||
+            maSV.length() == 0 ||
+            diemStr.length() == 0
+        ) {
+            JOptionPane.showMessageDialog(this, "Không đuợc để trống!");
+            return ;
+        }
+        
+        int diem = 0;
+        try {
+            diem = Integer.parseInt(diemStr);
+            
+            if (diem < 0 || diem > 10) {
+                JOptionPane.showMessageDialog(this, "Điểm phải nằm trong khoảng 0-10");
+                return ;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Điểm phải là số!");
+            return ;
+        }
+
+        try {
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+
+            String url = "jdbc:sqlserver://localhost:1433;databaseName=qlsv";
+            
+            Connection conn = DriverManager.getConnection(url,
+                this.dbUsername, this.dbPassword);
+            
+            String query = "INSERT INTO sinh_vien(name, email, password, ma_sv, diem)"
+                + " VALUES (?, ?, ?, ?, ?)";
+
+            PreparedStatement ps = conn.prepareStatement(query);
+
+            ps.setString(1, name);
+            ps.setString(2, email);
+            ps.setString(3, password);
+            ps.setString(4, maSV);
+            ps.setInt(5, diem);
+
+            ps.executeUpdate();
+
+            JOptionPane.showMessageDialog(this, "Insert thành công!");
+            conn.close();
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(QLSV.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(QLSV.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        /* Query get bản ghi vừa insert & hiển thị lên JTable */
+        SinhVien sv = this.timSinhVienTheoMaSV(maSV);
+        this.listSinhVien.add(sv);
+        // Hiển thị lên JTable
+    }//GEN-LAST:event_btnAddActionPerformed
+
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        // TODO add your handling code here:
+        int row = this.tblDanhSachSV.getSelectedRow();
+        
+        if (row == -1) {
+            return ;
+        }
+        
+        String maSV = this.tblDanhSachSV.getValueAt(row, 0).toString();
+        this.xoaSinhVienTheoMaSV(maSV);
+
+        // TODO: Cập nhật ArrayList & hiển thị lại JTable
+    }//GEN-LAST:event_btnDeleteActionPerformed
+
+    protected SinhVien timSinhVienTheoMaSV(String maSV)
+    {
+        SinhVien sv = null;
+        
+        try {
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            
+            String url = "jdbc:sqlserver://localhost:1433;databaseName=qlsv";
+
+            Connection conn = DriverManager.getConnection(url,
+                this.dbUsername, this.dbPassword);
+
+            String query = "SELECT * FROM sinh_vien WHERE ma_sv = ?";
+            
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setString(1, maSV);
+
+            ResultSet rs = ps.executeQuery();
+            
+            rs.next();
+            int id = rs.getInt("id");
+            int diem = rs.getInt("diem");
+            String name = rs.getString("name");
+            String email = rs.getString("email");
+            String password = rs.getString("password");
+            
+            sv = new SinhVien(
+                id,
+                diem,
+                name,
+                email,
+                password,
+                maSV
+            );
+            
+            conn.close();
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(QLSV.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(QLSV.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return sv;
+    }
+
+    protected SinhVien xoaSinhVienTheoMaSV(String maSV)
+    {
+        SinhVien sv = null;
+        
+        try {
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            
+            String url = "jdbc:sqlserver://localhost:1433;databaseName=qlsv";
+
+            Connection conn = DriverManager.getConnection(url,
+                this.dbUsername, this.dbPassword);
+
+            String query = "DELETE FROM sinh_vien WHERE ma_sv = ?";
+            
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setString(1, maSV);
+
+            ps.execute();
+            conn.close();
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(QLSV.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(QLSV.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return sv;
+    }
+    
     /**
      * @param args the command line arguments
      */
@@ -328,7 +507,9 @@ public class QLSV extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnSave;
+    private javax.swing.JButton btnAdd;
+    private javax.swing.JButton btnDelete;
+    private javax.swing.JButton btnUpdate;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
