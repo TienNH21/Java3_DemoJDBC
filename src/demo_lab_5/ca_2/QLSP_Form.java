@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -310,7 +311,7 @@ public class QLSP_Form extends javax.swing.JFrame {
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addContainerGap()
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(142, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -319,7 +320,7 @@ public class QLSP_Form extends javax.swing.JFrame {
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(160, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -335,8 +336,7 @@ public class QLSP_Form extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -373,11 +373,18 @@ public class QLSP_Form extends javax.swing.JFrame {
             return ;
         }
         
-        // Validate ngày nhập
+        Date ngayNhap;
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-mm-YYYY");
+        try {
+            ngayNhap = sdf.parse(ngayNhapStr);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Ngày nhập sai định dạng");
+            return ;
+        }
 
         // Bước 1: getConnection: this.conn
         String query = "INSERT INTO san_pham(ten, ma_sp, so_luong, ngay_nhap) "
-                + " OUTPUT INSERTED.ID "
+                + " OUTPUT INSERTED.ID, INSERTED.TEN "
                 + " VALUES (? , ?, ?, ?)";
         try {
             PreparedStatement ps = this.conn.prepareStatement(query);
@@ -392,8 +399,11 @@ public class QLSP_Form extends javax.swing.JFrame {
             ResultSet rs = ps.getResultSet();
             rs.next();
             int id = rs.getInt("id");
-            System.out.println("id: " + id);
-//            SanPham sp = new SanPham(id, soLuong, maSP, tenSP, );
+            String ten = rs.getString("ten");
+
+            SanPham sp = new SanPham(id, soLuong, maSP, tenSP, ngayNhap);
+            this.listSP.add(sp);
+            this.renderJTable(listSP);
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Thêm bản ghi thất bại!");

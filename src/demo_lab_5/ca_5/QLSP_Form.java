@@ -338,13 +338,13 @@ public class QLSP_Form extends javax.swing.JFrame {
 
         String query = "UPDATE san_pham SET ten = ?, ngay_nhap = ?, so_luong = ?"
             + " WHERE ma_sp = ?";
-        
+
         try {
             PreparedStatement ps = this.conn.prepareStatement(query);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            
+
             Date ngayNhap = sdf.parse(ngayNhapStr);
-            
+
             ps.setString(1, tenSP);
             ps.setDate(2, new java.sql.Date(ngayNhap.getTime()));
             ps.setInt(3, Integer.parseInt(soLuongStr));
@@ -353,9 +353,9 @@ public class QLSP_Form extends javax.swing.JFrame {
             ps.execute();
             JOptionPane.showMessageDialog(this, "Update thành công!");
         } catch (SQLException ex) {
-            Logger.getLogger(QLSP_Form.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         } catch (ParseException ex) {
-            Logger.getLogger(QLSP_Form.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_btnUpdateActionPerformed
 
