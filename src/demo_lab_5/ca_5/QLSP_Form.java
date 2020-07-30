@@ -10,9 +10,14 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.PreparedStatement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -143,8 +148,18 @@ public class QLSP_Form extends javax.swing.JFrame {
         });
 
         btnUpdate.setText("Update");
+        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUpdateActionPerformed(evt);
+            }
+        });
 
         btnDelete.setText("Delete");
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteActionPerformed(evt);
+            }
+        });
 
         btnClear.setText("Clear");
 
@@ -290,10 +305,11 @@ public class QLSP_Form extends javax.swing.JFrame {
         
         int soLuong = Integer.parseInt(soLuongStr);
         String query = "INSERT INTO san_pham(ma_sp, ten, so_luong, ngay_nhap) "
+            + " OUTPUT INSERTED.ID "
             + " VALUES (?, ?, ?, ?)";
         
         try {
-            PreparedStatement ps = this.conn.prepareStatement(query);
+            PreparedStatement ps = this.conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             
             ps.setString(1, maSP);
             ps.setString(2, tenSP);
@@ -301,10 +317,68 @@ public class QLSP_Form extends javax.swing.JFrame {
             ps.setString(4, ngayNhap);
             
             ps.execute();
+
+//            ResultSet rs = ps.getGeneratedKeys();
+            ResultSet rs = ps.getResultSet();
+            rs.next();
+
+            int id = rs.getInt(1);
+
+            System.out.println(id);
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
     }//GEN-LAST:event_btnAddActionPerformed
+
+    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
+        String maSP = this.txtMaSP.getText();
+        String tenSP = this.txtTenSP.getText();
+        String ngayNhapStr = this.txtNgayNhap.getText();
+        String soLuongStr = this.txtSoLuong.getText();
+
+        String query = "UPDATE san_pham SET ten = ?, ngay_nhap = ?, so_luong = ?"
+            + " WHERE ma_sp = ?";
+        
+        try {
+            PreparedStatement ps = this.conn.prepareStatement(query);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            
+            Date ngayNhap = sdf.parse(ngayNhapStr);
+            
+            ps.setString(1, tenSP);
+            ps.setDate(2, new java.sql.Date(ngayNhap.getTime()));
+            ps.setInt(3, Integer.parseInt(soLuongStr));
+            ps.setString(4, maSP);
+
+            ps.execute();
+            JOptionPane.showMessageDialog(this, "Update thành công!");
+        } catch (SQLException ex) {
+            Logger.getLogger(QLSP_Form.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ParseException ex) {
+            Logger.getLogger(QLSP_Form.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnUpdateActionPerformed
+
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        // TODO add your handling code here:
+        
+        int row = this.tblDSSP.getSelectedRow();
+        if (row == -1) {
+            return ;
+        }
+        
+        String query = "DELETE san_pham WHERE ma_sp = ?";
+        
+        try {
+            String maSP = this.tblDSSP.getValueAt(row, 0).toString();
+            PreparedStatement ps = this.conn.prepareStatement(query);
+            ps.setString(1, maSP);
+            
+            ps.execute();
+        } catch (SQLException ex) {
+            Logger.getLogger(QLSP_Form.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnDeleteActionPerformed
 
     /**
      * @param args the command line arguments

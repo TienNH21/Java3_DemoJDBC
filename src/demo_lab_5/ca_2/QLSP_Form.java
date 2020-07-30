@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -147,10 +148,25 @@ public class QLSP_Form extends javax.swing.JFrame {
         jLabel6.setText("Số Lượng");
 
         btnAdd.setText("Add");
+        btnAdd.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddActionPerformed(evt);
+            }
+        });
 
         btnUpdate.setText("Update");
+        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUpdateActionPerformed(evt);
+            }
+        });
 
         btnDelete.setText("Delete");
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteActionPerformed(evt);
+            }
+        });
 
         btnClear.setText("Clear");
 
@@ -226,6 +242,11 @@ public class QLSP_Form extends javax.swing.JFrame {
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
+            }
+        });
+        tblDSSP.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblDSSPMouseClicked(evt);
             }
         });
         jScrollPane1.setViewportView(tblDSSP);
@@ -320,6 +341,156 @@ public class QLSP_Form extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
+        String maSP = this.txtMaSP.getText();
+        String tenSP = this.txtTenSP.getText();
+        String soLuongStr = this.txtSoLuong.getText();
+        String ngayNhapStr = this.txtNgayNhap.getText();
+        
+        if (
+            maSP.length() == 0 ||
+            tenSP.length() == 0 ||
+            soLuongStr.length() == 0 ||
+            ngayNhapStr.length() == 0
+        ) {
+            JOptionPane.showMessageDialog(this, "Các ô nhập không được để trống");
+            return ;
+        }
+
+        int soLuong = 0;
+        
+        try {
+            soLuong = Integer.parseInt(soLuongStr);
+
+            if (soLuong <= 0) {
+                JOptionPane.showMessageDialog(this, "Số lượng phải lớn hơn 0");
+                return ;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Số lượng phải là số nguyên");
+            return ;
+        }
+        
+        // Validate ngày nhập
+
+        // Bước 1: getConnection: this.conn
+        String query = "INSERT INTO san_pham(ten, ma_sp, so_luong, ngay_nhap) "
+                + " OUTPUT INSERTED.ID "
+                + " VALUES (? , ?, ?, ?)";
+        try {
+            PreparedStatement ps = this.conn.prepareStatement(query);
+            ps.setString(1, tenSP);
+            ps.setString(2, maSP);
+            ps.setInt(3, soLuong);
+            ps.setString(4, ngayNhapStr);
+            
+            ps.execute();
+            JOptionPane.showMessageDialog(this, "Thêm bản ghi thành công!");
+            
+            ResultSet rs = ps.getResultSet();
+            rs.next();
+            int id = rs.getInt("id");
+            System.out.println("id: " + id);
+//            SanPham sp = new SanPham(id, soLuong, maSP, tenSP, );
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Thêm bản ghi thất bại!");
+        }
+    }//GEN-LAST:event_btnAddActionPerformed
+
+    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
+        String maSP = this.txtMaSP.getText();
+        String tenSP = this.txtTenSP.getText();
+        String soLuongStr = this.txtSoLuong.getText();
+        String ngayNhapStr = this.txtNgayNhap.getText();
+        
+        if (
+            maSP.length() == 0 ||
+            tenSP.length() == 0 ||
+            soLuongStr.length() == 0 ||
+            ngayNhapStr.length() == 0
+        ) {
+            JOptionPane.showMessageDialog(this, "Các ô nhập không được để trống");
+            return ;
+        }
+
+        int soLuong = 0;
+        
+        try {
+            soLuong = Integer.parseInt(soLuongStr);
+
+            if (soLuong <= 0) {
+                JOptionPane.showMessageDialog(this, "Số lượng phải lớn hơn 0");
+                return ;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Số lượng phải là số nguyên");
+            return ;
+        }
+        
+        // Validate ngày nhập
+
+        String query = "UPDATE san_pham SET ten = ?, so_luong = ?, ngay_nhap = ?"
+            + " WHERE ma_sp = ?";
+        
+        try {
+            PreparedStatement ps = this.conn.prepareStatement(query);
+            ps.setString(1, tenSP);
+            ps.setInt(2, soLuong);
+            ps.setString(3, ngayNhapStr);
+            ps.setString(4, maSP);
+            System.out.println(maSP + '-' + tenSP);
+            
+            ps.execute();
+            JOptionPane.showMessageDialog(this, "Update thành công!");
+        } catch (SQLException ex) {
+            Logger.getLogger(QLSP_Form.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnUpdateActionPerformed
+
+    private void tblDSSPMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblDSSPMouseClicked
+        // TODO add your handling code here:
+        int row = this.tblDSSP.getSelectedRow();
+        if (row == -1) {
+            return ;
+        }
+        
+        String maSP = this.tblDSSP.getValueAt(row, 0).toString();
+        String tenSP = this.tblDSSP.getValueAt(row, 1).toString();
+        String ngayNhapStr = this.tblDSSP.getValueAt(row, 2).toString();
+        String soLuongStr = this.tblDSSP.getValueAt(row, 3).toString();
+        
+        this.txtMaSP.setText(maSP);
+        this.txtTenSP.setText(tenSP);
+        this.txtSoLuong.setText(soLuongStr);
+        this.txtNgayNhap.setText(ngayNhapStr);
+    }//GEN-LAST:event_tblDSSPMouseClicked
+
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        // TODO add your handling code here:
+        int row = this.tblDSSP.getSelectedRow();
+        
+        if (row == -1) {
+            // THong bao
+            return ;
+        }
+        
+        String query = "DELETE FROM san_pham WHERE ma_sp = ?";
+        String maSP = this.tblDSSP.getValueAt(row, 0).toString();
+        
+        try {
+            PreparedStatement ps = this.conn.prepareStatement(query);
+            ps.setString(1, maSP);
+            
+            ps.execute();
+            // Thong bao
+        } catch (SQLException ex) {
+            Logger.getLogger(QLSP_Form.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnDeleteActionPerformed
 
     /**
      * @param args the command line arguments

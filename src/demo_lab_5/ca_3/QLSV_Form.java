@@ -108,7 +108,7 @@ public class QLSV_Form extends javax.swing.JFrame {
     public int insert(SanPham sp)
     {
         String query = "INSERT INTO san_pham(ma_sp, ten, ngay_nhap, so_luong)"
-                + " OUTPUT INSERTED.ID "
+//                + " OUTPUT INSERTED.ID "
                 + "VALUES (?, ?, ?, ?)";
 
         try {
@@ -131,6 +131,8 @@ public class QLSV_Form extends javax.swing.JFrame {
         
         return -1;
     }
+    
+    
     
     /**
      * This method is called from within the constructor to initialize the form.
@@ -179,8 +181,18 @@ public class QLSV_Form extends javax.swing.JFrame {
         });
 
         btnUpdate.setText("Update");
+        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUpdateActionPerformed(evt);
+            }
+        });
 
         btnDelete.setText("Delete");
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteActionPerformed(evt);
+            }
+        });
 
         btnClear.setText("Clear");
 
@@ -336,6 +348,71 @@ public class QLSV_Form extends javax.swing.JFrame {
         
         this.renderJTable(this.listSP);
     }//GEN-LAST:event_btnAddActionPerformed
+
+    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
+        String maSP = this.txtMaSP.getText();
+        String tenSP = this.txtTenSP.getText();
+        String ngayNhapStr = this.txtNgayNhap.getText();
+        String soLuongStr = this.txtSoLuong.getText();
+        Date ngayNhap;
+        int soLuong;
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-YYYY");
+        try {
+            ngayNhap = sdf.parse(ngayNhapStr);
+            soLuong = Integer.parseInt(soLuongStr);
+
+            if (soLuong < 0) {
+                JOptionPane.showMessageDialog(this, "Lỗi");
+                return ;
+            }
+
+            
+        } catch (Exception ex) {
+            Logger.getLogger(QLSV_Form.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, "Lỗi");
+            return ;
+        }
+        
+        String query = "UDATE san_pham SET ten = ?, so_luong = ?, ngay_nhap = ? "
+                + " WHERE ma_sp = ?";
+        try {
+            PreparedStatement ps = this.conn.prepareStatement(query);
+            
+            ps.setString(1, tenSP);
+            ps.setInt(2, soLuong);
+            ps.setDate(3, new java.sql.Date(ngayNhap.getTime()));
+            ps.setString(4, maSP);
+            
+            ps.execute();
+            JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+        } catch (SQLException ex) {
+            Logger.getLogger(QLSV_Form.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnUpdateActionPerformed
+
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        int row = this.tblDSSP.getSelectedRow();
+
+        int confirmed = JOptionPane.showConfirmDialog(this, "Bạn có muốn xóa không?");
+        System.out.println(confirmed);
+        if (confirmed != 0 || row == -1) {
+            return ;
+        }
+        
+        String maSP = this.tblDSSP.getValueAt(row, 0).toString();
+        
+        String query = "DELETE san_pham WHERE ma_sp = ?";
+        try {
+            PreparedStatement ps = this.conn.prepareStatement(query);
+            
+            ps.setString(1, maSP);
+            ps.execute();
+            JOptionPane.showMessageDialog(this, "Xóa thành công!");
+        } catch (SQLException ex) {
+            Logger.getLogger(QLSV_Form.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnDeleteActionPerformed
 
     /**
      * @param args the command line arguments
