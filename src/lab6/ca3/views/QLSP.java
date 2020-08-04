@@ -14,6 +14,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import java.util.logging.Level;
@@ -57,6 +59,7 @@ public class QLSP extends javax.swing.JFrame {
     
     private void renderJTable(ArrayList<SanPham> data) {
         DefaultTableModel model = (DefaultTableModel) this.tblListSP.getModel();
+        model.setRowCount(0);
         for (int i = 0; i < data.size(); i++) {
             SanPham sp = data.get(i);
             model.addRow(new Object[] {
@@ -111,7 +114,7 @@ public class QLSP extends javax.swing.JFrame {
                 Date ngayNhap = rs.getDate("ngay_nhap");
                 
                 SanPham sp = new SanPham(id, soLuong, danhMucId, tenSP, maSP, ngayNhap);
-                
+
                 data.add(sp);
             }
         } catch (SQLException ex) {
@@ -296,6 +299,12 @@ public class QLSP extends javax.swing.JFrame {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
+        cbDanhMucFilter.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbDanhMucFilterActionPerformed(evt);
+            }
+        });
+
         jLabel2.setText("Danh Mục");
 
         tblListSP.setModel(new javax.swing.table.DefaultTableModel(
@@ -319,6 +328,11 @@ public class QLSP extends javax.swing.JFrame {
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
+            }
+        });
+        tblListSP.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblListSPMouseClicked(evt);
             }
         });
         jScrollPane1.setViewportView(tblListSP);
@@ -392,7 +406,106 @@ public class QLSP extends javax.swing.JFrame {
 
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
         // TODO add your handling code here:
+        String tenSP = this.txtTenSP.getText();
+        String maSP = this.txtMaSP.getText();
+        String soLuongStr = this.txtSoLuong.getText();
+        String ngayNhapStr = this.txtNgayNhap.getText();
+        String tenDanhMuc = this.cbDanhMuc.getSelectedItem().toString();
+        DanhMuc danhMuc = this.timDanhMucTheoTen(tenDanhMuc);
+
+        if (
+            tenSP.length() == 0 ||
+            maSP.length() == 0 ||
+            soLuongStr.length() == 0 ||
+            ngayNhapStr.length() == 0
+        ) {
+            JOptionPane.showMessageDialog(this, "Không được để trống!");
+            return ;
+        }
+        
+        int soLuong = 0;
+        try {
+            soLuong = Integer.parseInt(soLuongStr);
+            
+            if (soLuong <= 0) {
+                JOptionPane.showMessageDialog(this, "Số lượng phải lớn hơn 0!");
+                return;
+            }
+        } catch ( NumberFormatException e ) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Số lượng phải là số nguyên!");
+            return;
+        }
+        
+        Date ngayNhap = null;
+        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+        try {
+            ngayNhap = sdf.parse(ngayNhapStr);
+        } catch (ParseException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Ngày nhập không hợp lệ!");
+            return;
+        }
+
+        String query = "INSERT INTO san_pham(ten, ma_sp, ngay_nhap, so_luong, danh_muc_id)"
+            + " OUTPUT INSERTED.ID "
+            + " VALUES (?, ?, ?, ?, ?)";
+
+        try {
+            PreparedStatement ps = this.conn.prepareStatement(query);
+            
+            ps.setString(1, tenSP);
+            ps.setString(2, maSP);
+            ps.setDate(3, new java.sql.Date(ngayNhap.getTime()));
+            ps.setInt(4, soLuong);
+            ps.setInt(5, danhMuc.getId());
+            
+            ps.execute();
+            
+            ResultSet rs = ps.getResultSet();
+            rs.next();
+            int id = rs.getInt(1);
+
+            SanPham sp = new SanPham(id, soLuong, danhMuc.getId(), tenSP,
+                maSP, new java.sql.Date(ngayNhap.getTime()));
+
+            this.listSanPham.add(sp);
+            this.renderJTable(this.listSanPham);
+
+            JOptionPane.showMessageDialog(this, "Thêm thành công!");
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }//GEN-LAST:event_btnAddActionPerformed
+
+    private void cbDanhMucFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbDanhMucFilterActionPerformed
+        // TODO add your handling code here:
+        String tenDanhMuc = this.cbDanhMucFilter.getSelectedItem().toString();
+        DanhMuc danhMuc = this.timDanhMucTheoTen(tenDanhMuc);
+        
+        ArrayList<SanPham> data = this.fetchListSanPham(danhMuc.getId());
+        this.renderJTable(data);
+    }//GEN-LAST:event_cbDanhMucFilterActionPerformed
+
+    private void tblListSPMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblListSPMouseClicked
+        int row = this.tblListSP.getSelectedRow();
+        
+        if (row == -1) {
+            return ;
+        }
+        
+        String maSP = this.tblListSP.getValueAt(row, 0).toString();
+        String tenSP = this.tblListSP.getValueAt(row, 1).toString();
+        String soLuongStr = this.tblListSP.getValueAt(row, 2).toString();
+        String ngayNhapStr = this.tblListSP.getValueAt(row, 3).toString();
+        int danhMucIndex = this.cbDanhMuc.getSelectedIndex();
+        
+        this.txtTenSP.setText(tenSP);
+        this.txtMaSP.setText(maSP);
+        this.txtSoLuong.setText(soLuongStr);
+        this.txtNgayNhap.setText(ngayNhapStr);
+        this.cbDanhMuc.setSelectedIndex(danhMucIndex);
+    }//GEN-LAST:event_tblListSPMouseClicked
 
     /**
      * @param args the command line arguments

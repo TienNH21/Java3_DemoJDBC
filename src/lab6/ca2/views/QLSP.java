@@ -13,8 +13,10 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -37,6 +39,49 @@ public class QLSP extends javax.swing.JFrame {
         this.conn = this.initConnection();
         this.fetchListDanhMuc();
         this.loadDanhMuc();
+        
+        String tenDanhMuc = this.cbDanhMuc.getSelectedItem().toString();
+        DanhMuc danhMuc = this.timDanhMucTheoTen(tenDanhMuc);
+        
+        this.fetchListSanPham(danhMuc.getId());
+    }
+    
+    protected void fetchListSanPham(int danhMucId)
+    {
+        String query = "SELECT * FROM san_pham WHERE danh_muc_id = ?";
+        this.listSanPham.clear();
+        
+        try {
+            PreparedStatement ps = this.conn.prepareStatement(query);
+
+            ps.setInt(1, danhMucId);
+            ResultSet rs = ps.executeQuery();
+
+            while ( rs.next() ) {
+                int id = rs.getInt("id");
+                String tenSP = rs.getString("ten");
+                String maSP = rs.getString("ma_sp");
+                int soLuong = rs.getInt("so_luong");
+                Date ngayNhap = rs.getDate("ngay_nhap");
+                
+                SanPham sp = new SanPham(id, danhMucId, soLuong, tenSP, maSP, ngayNhap);
+                this.listSanPham.add(sp);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        DefaultTableModel model = (DefaultTableModel) this.tblSanPham.getModel();
+        model.setRowCount(0);
+        for (int i = 0; i < this.listSanPham.size(); i++) {
+            SanPham sp = this.listSanPham.get(i);
+            model.addRow(new Object[] {
+                sp.getMaSP(),
+                sp.getTenSP(),
+                sp.getNgayNhap(),
+                sp.getSoLuong()
+            });
+        }
     }
 
     protected Connection initConnection() {
@@ -94,7 +139,6 @@ public class QLSP extends javax.swing.JFrame {
             }
         }
 
-        danhMuc.getId();
         return danhMuc;
     }
     
@@ -140,13 +184,19 @@ public class QLSP extends javax.swing.JFrame {
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
+            .addGap(0, 112, Short.MAX_VALUE)
             .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel2Layout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addGap(0, 48, Short.MAX_VALUE)
                     .addComponent(jLabel1)
-                    .addGap(0, 0, Short.MAX_VALUE)))
+                    .addGap(0, 48, Short.MAX_VALUE)))
         );
+
+        cbDanhMuc.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbDanhMucActionPerformed(evt);
+            }
+        });
 
         tblSanPham.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -217,7 +267,7 @@ public class QLSP extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -241,6 +291,15 @@ public class QLSP extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void cbDanhMucActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbDanhMucActionPerformed
+        // TODO add your handling code here:
+        String tenDanhMuc = this.cbDanhMuc.getSelectedItem().toString();
+        DanhMuc danhMuc = this.timDanhMucTheoTen(tenDanhMuc);
+        
+        
+        this.fetchListSanPham(danhMuc.getId());
+    }//GEN-LAST:event_cbDanhMucActionPerformed
 
     /**
      * @param args the command line arguments
